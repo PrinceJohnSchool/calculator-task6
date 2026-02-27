@@ -14,6 +14,10 @@ namespace CalculatorApp
         private Button divideButton;
         private Label resultLabel;
 
+        private double firstNumber;
+        private double secondNumber;
+        private double calculationResult;
+
         public CalculatorForm()
         {
             InitializeComponent();
@@ -21,7 +25,6 @@ namespace CalculatorApp
 
         private void InitializeComponent()
         {
-            // Form properties
             this.Text = "Simple Calculator";
             this.Size = new Size(400, 300);
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -30,7 +33,6 @@ namespace CalculatorApp
             this.MaximizeBox = false;
             this.MinimizeBox = true;
 
-            // Number 1 TextBox
             number1TextBox = new TextBox();
             number1TextBox.Location = new Point(50, 30);
             number1TextBox.Size = new Size(150, 25);
@@ -39,7 +41,6 @@ namespace CalculatorApp
             number1TextBox.PlaceholderText = "Enter first number";
             this.Controls.Add(number1TextBox);
 
-            // Number 2 TextBox
             number2TextBox = new TextBox();
             number2TextBox.Location = new Point(200, 30);
             number2TextBox.Size = new Size(150, 25);
@@ -48,7 +49,6 @@ namespace CalculatorApp
             number2TextBox.PlaceholderText = "Enter second number";
             this.Controls.Add(number2TextBox);
 
-            // Add Button
             addButton = new Button();
             addButton.Text = "+";
             addButton.Location = new Point(50, 80);
@@ -56,9 +56,9 @@ namespace CalculatorApp
             addButton.Font = new Font("Arial", 16, FontStyle.Bold);
             addButton.BackColor = Color.LightBlue;
             addButton.ForeColor = Color.DarkBlue;
+            addButton.Click += AddButton_Click;
             this.Controls.Add(addButton);
 
-            // Subtract Button
             subtractButton = new Button();
             subtractButton.Text = "−";
             subtractButton.Location = new Point(130, 80);
@@ -66,9 +66,9 @@ namespace CalculatorApp
             subtractButton.Font = new Font("Arial", 16, FontStyle.Bold);
             subtractButton.BackColor = Color.LightGreen;
             subtractButton.ForeColor = Color.DarkGreen;
+            subtractButton.Click += SubtractButton_Click;
             this.Controls.Add(subtractButton);
 
-            // Multiply Button
             multiplyButton = new Button();
             multiplyButton.Text = "×";
             multiplyButton.Location = new Point(210, 80);
@@ -76,9 +76,9 @@ namespace CalculatorApp
             multiplyButton.Font = new Font("Arial", 16, FontStyle.Bold);
             multiplyButton.BackColor = Color.LightYellow;
             multiplyButton.ForeColor = Color.DarkOrange;
+            multiplyButton.Click += MultiplyButton_Click;
             this.Controls.Add(multiplyButton);
 
-            // Divide Button
             divideButton = new Button();
             divideButton.Text = "÷";
             divideButton.Location = new Point(290, 80);
@@ -86,9 +86,9 @@ namespace CalculatorApp
             divideButton.Font = new Font("Arial", 16, FontStyle.Bold);
             divideButton.BackColor = Color.LightCoral;
             divideButton.ForeColor = Color.DarkRed;
+            divideButton.Click += DivideButton_Click;
             this.Controls.Add(divideButton);
 
-            // Result Label (for display purposes)
             resultLabel = new Label();
             resultLabel.Text = "Result will appear here";
             resultLabel.Location = new Point(50, 150);
@@ -99,7 +99,6 @@ namespace CalculatorApp
             resultLabel.BorderStyle = BorderStyle.FixedSingle;
             this.Controls.Add(resultLabel);
 
-            // Title Label
             Label titleLabel = new Label();
             titleLabel.Text = "Simple Calculator";
             titleLabel.Location = new Point(50, 5);
@@ -107,6 +106,77 @@ namespace CalculatorApp
             titleLabel.Font = new Font("Arial", 14, FontStyle.Bold);
             titleLabel.TextAlign = ContentAlignment.MiddleCenter;
             this.Controls.Add(titleLabel);
+        }
+
+        private bool ValidateInputs()
+        {
+            if (double.TryParse(number1TextBox.Text, out firstNumber))
+            {
+                if (double.TryParse(number2TextBox.Text, out secondNumber))
+                {
+                    return true;
+                }
+                else
+                {
+                    resultLabel.Text = "Error: Second number is invalid. Please enter a valid number.";
+                    resultLabel.ForeColor = Color.Red;
+                    return false;
+                }
+            }
+            else
+            {
+                resultLabel.Text = "Error: First number is invalid. Please enter a valid number.";
+                resultLabel.ForeColor = Color.Red;
+                return false;
+            }
+        }
+
+        private void AddButton_Click(object sender, EventArgs e)
+        {
+            if (ValidateInputs())
+            {
+                calculationResult = firstNumber + secondNumber;
+                resultLabel.Text = $"Result: {firstNumber} + {secondNumber} = {calculationResult}";
+                resultLabel.ForeColor = Color.Black;
+            }
+        }
+
+        private void SubtractButton_Click(object sender, EventArgs e)
+        {
+            if (ValidateInputs())
+            {
+                calculationResult = firstNumber - secondNumber;
+                resultLabel.Text = $"Result: {firstNumber} − {secondNumber} = {calculationResult}";
+                resultLabel.ForeColor = Color.Black;
+            }
+        }
+
+        private void MultiplyButton_Click(object sender, EventArgs e)
+        {
+            if (ValidateInputs())
+            {
+                calculationResult = firstNumber * secondNumber;
+                resultLabel.Text = $"Result: {firstNumber} × {secondNumber} = {calculationResult}";
+                resultLabel.ForeColor = Color.Black;
+            }
+        }
+
+        private void DivideButton_Click(object sender, EventArgs e)
+        {
+            if (ValidateInputs())
+            {
+                if (secondNumber == 0)
+                {
+                    resultLabel.Text = "Error: Cannot divide by zero. Please enter a non-zero second number.";
+                    resultLabel.ForeColor = Color.Red;
+                }
+                else
+                {
+                    calculationResult = firstNumber / secondNumber;
+                    resultLabel.Text = $"Result: {firstNumber} ÷ {secondNumber} = {calculationResult}";
+                    resultLabel.ForeColor = Color.Black;
+                }
+            }
         }
     }
 }
