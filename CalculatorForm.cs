@@ -131,11 +131,31 @@ namespace CalculatorApp
             }
         }
 
+        private double PerformAddition(double num1, double num2)
+        {
+            return num1 + num2;
+        }
+
+        private double PerformSubtraction(double num1, double num2)
+        {
+            return num1 - num2;
+        }
+
+        private double PerformMultiplication(double num1, double num2)
+        {
+            return num1 * num2;
+        }
+
+        private double PerformDivision(double num1, double num2)
+        {
+            return num1 / num2;
+        }
+
         private void AddButton_Click(object sender, EventArgs e)
         {
             if (ValidateInputs())
             {
-                calculationResult = firstNumber + secondNumber;
+                calculationResult = PerformAddition(firstNumber, secondNumber);
                 resultLabel.Text = $"Result: {firstNumber} + {secondNumber} = {calculationResult}";
                 resultLabel.ForeColor = Color.Black;
             }
@@ -145,7 +165,7 @@ namespace CalculatorApp
         {
             if (ValidateInputs())
             {
-                calculationResult = firstNumber - secondNumber;
+                calculationResult = PerformSubtraction(firstNumber, secondNumber);
                 resultLabel.Text = $"Result: {firstNumber} − {secondNumber} = {calculationResult}";
                 resultLabel.ForeColor = Color.Black;
             }
@@ -155,7 +175,7 @@ namespace CalculatorApp
         {
             if (ValidateInputs())
             {
-                calculationResult = firstNumber * secondNumber;
+                calculationResult = PerformMultiplication(firstNumber, secondNumber);
                 resultLabel.Text = $"Result: {firstNumber} × {secondNumber} = {calculationResult}";
                 resultLabel.ForeColor = Color.Black;
             }
@@ -172,7 +192,7 @@ namespace CalculatorApp
                 }
                 else
                 {
-                    calculationResult = firstNumber / secondNumber;
+                    calculationResult = PerformDivision(firstNumber, secondNumber);
                     resultLabel.Text = $"Result: {firstNumber} ÷ {secondNumber} = {calculationResult}";
                     resultLabel.ForeColor = Color.Black;
                 }
