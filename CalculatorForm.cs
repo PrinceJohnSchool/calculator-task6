@@ -6,57 +6,76 @@ using System.Windows.Forms;
 
 namespace CalculatorApp
 {
+    /// <summary>
+    /// Main calculator form that provides a graphical interface for performing basic arithmetic operations.
+    /// Supports addition, subtraction, multiplication, and division with history tracking and data persistence.
+    /// </summary>
     public partial class CalculatorForm : Form
     {
-        private const int MaxHistoryEntries = 50;
+        // Constants
+        private const int MaxHistoryEntries = 50; // Maximum number of history entries that can be stored
 
-        private TextBox number1TextBox;
-        private TextBox number2TextBox;
-        private Button addButton;
-        private Button subtractButton;
-        private Button multiplyButton;
-        private Button divideButton;
-        private Button clearButton;
-        private Button viewHistoryButton;
-        private Button saveArraysButton;
-        private Button loadArraysButton;
-        private Button saveSettingsButton;
-        private Button loadSettingsButton;
-        private Label resultLabel;
+        // UI Controls - Input fields and buttons
+        private TextBox number1TextBox;        // Text box for entering the first number
+        private TextBox number2TextBox;        // Text box for entering the second number
+        private Button addButton;              // Button to perform addition
+        private Button subtractButton;         // Button to perform subtraction
+        private Button multiplyButton;         // Button to perform multiplication
+        private Button divideButton;           // Button to perform division
+        private Button clearButton;            // Button to clear input fields and result
+        private Button viewHistoryButton;      // Button to open the history form
+        private Button saveArraysButton;       // Button to save array data to file
+        private Button loadArraysButton;       // Button to load array data from file
+        private Button saveSettingsButton;     // Button to save settings to file
+        private Button loadSettingsButton;     // Button to load settings from file
+        private Label resultLabel;             // Label displaying the calculation result
 
-        private double firstNumber;
-        private double secondNumber;
-        private double calculationResult;
-        private List<string> calculationHistory;
+        // Calculation data
+        private double firstNumber;            // The first number entered by the user
+        private double secondNumber;           // The second number entered by the user
+        private double calculationResult;     // The result of the current calculation
+        private List<string> calculationHistory; // List storing calculation history as strings
 
         // Arrays for the arrays assignment requirements
-        // Stores just the numeric result values
-        private double[] resultArray;
-        // Stores the text of the calculation (e.g. "5 + 3 = 8")
-        private string[] operationArray;
-        // Keeps track of how many entries are currently stored
-        private int historyEntryCount;
+        // These arrays store calculation history in a fixed-size array format
+        private double[] resultArray;          // Array storing just the numeric result values
+        private string[] operationArray;       // Array storing the text of the calculation (e.g. "5 + 3 = 8")
+        private int historyEntryCount;         // Keeps track of how many entries are currently stored in the arrays
 
+        /// <summary>
+        /// Constructor for CalculatorForm.
+        /// Initializes the form, creates data structures, and loads saved data from files.
+        /// </summary>
         public CalculatorForm()
         {
-            calculationHistory = new List<string>();
-            resultArray = new double[MaxHistoryEntries];
-            operationArray = new string[MaxHistoryEntries];
-            historyEntryCount = 0;
+            // Initialize data structures
+            calculationHistory = new List<string>(); // Initialize the history list
+            resultArray = new double[MaxHistoryEntries]; // Initialize result array with max capacity
+            operationArray = new string[MaxHistoryEntries]; // Initialize operation array with max capacity
+            historyEntryCount = 0; // Start with no history entries
+            
+            // Set up the form UI
             InitializeComponent();
-            LoadArrayDataFromFileSilent();
-            LoadSettingsFromFileSilent();
+            
+            // Load previously saved data silently (without showing dialogs)
+            LoadArrayDataFromFileSilent(); // Load array data from file if it exists
+            LoadSettingsFromFileSilent();  // Load settings from file if they exist
         }
 
+        /// <summary>
+        /// Initializes all UI components for the calculator form.
+        /// Sets up text boxes, buttons, labels, and their properties and event handlers.
+        /// </summary>
         private void InitializeComponent()
         {
+            // Configure form properties
             this.Text = "Simple Calculator";
             this.Size = new Size(400, 490);
-            this.StartPosition = FormStartPosition.CenterScreen;
+            this.StartPosition = FormStartPosition.CenterScreen; // Center the form on screen
             this.BackColor = Color.LightGray;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = true;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog; // Fixed size dialog
+            this.MaximizeBox = false; // Cannot maximize
+            this.MinimizeBox = true;  // Can minimize
 
             number1TextBox = new TextBox();
             number1TextBox.Location = new Point(50, 30);
@@ -195,16 +214,24 @@ namespace CalculatorApp
             this.Controls.Add(titleLabel);
         }
 
+        /// <summary>
+        /// Validates that both input text boxes contain valid numeric values.
+        /// Parses the text box values and stores them in firstNumber and secondNumber if valid.
+        /// </summary>
+        /// <returns>True if both inputs are valid numbers, false otherwise</returns>
         private bool ValidateInputs()
         {
+            // Try to parse the first number
             if (double.TryParse(number1TextBox.Text, out firstNumber))
             {
+                // First number is valid, try to parse the second number
                 if (double.TryParse(number2TextBox.Text, out secondNumber))
                 {
-                    return true;
+                    return true; // Both numbers are valid
                 }
                 else
                 {
+                    // Second number is invalid - show error message
                     resultLabel.Text = "Error: Second number is invalid. Please enter a valid number.";
                     resultLabel.ForeColor = Color.Red;
                     return false;
@@ -212,175 +239,261 @@ namespace CalculatorApp
             }
             else
             {
+                // First number is invalid - show error message
                 resultLabel.Text = "Error: First number is invalid. Please enter a valid number.";
                 resultLabel.ForeColor = Color.Red;
                 return false;
             }
         }
 
+        // Arithmetic operation methods - perform basic mathematical operations
+        
+        /// <summary>
+        /// Performs addition of two numbers.
+        /// </summary>
+        /// <param name="num1">First number</param>
+        /// <param name="num2">Second number</param>
+        /// <returns>The sum of num1 and num2</returns>
         private double PerformAddition(double num1, double num2)
         {
             return num1 + num2;
         }
 
+        /// <summary>
+        /// Performs subtraction of two numbers.
+        /// </summary>
+        /// <param name="num1">First number (minuend)</param>
+        /// <param name="num2">Second number (subtrahend)</param>
+        /// <returns>The difference of num1 and num2 (num1 - num2)</returns>
         private double PerformSubtraction(double num1, double num2)
         {
             return num1 - num2;
         }
 
+        /// <summary>
+        /// Performs multiplication of two numbers.
+        /// </summary>
+        /// <param name="num1">First number</param>
+        /// <param name="num2">Second number</param>
+        /// <returns>The product of num1 and num2</returns>
         private double PerformMultiplication(double num1, double num2)
         {
             return num1 * num2;
         }
 
+        /// <summary>
+        /// Performs division of two numbers.
+        /// Note: Does not check for division by zero - caller should validate.
+        /// </summary>
+        /// <param name="num1">First number (dividend)</param>
+        /// <param name="num2">Second number (divisor)</param>
+        /// <returns>The quotient of num1 and num2 (num1 / num2)</returns>
         private double PerformDivision(double num1, double num2)
         {
             return num1 / num2;
         }
 
+        /// <summary>
+        /// Event handler for the Add button click.
+        /// Performs addition operation, displays result, and adds to history.
+        /// </summary>
         private void AddButton_Click(object sender, EventArgs e)
         {
             try
             {
+                // Validate inputs before performing calculation
                 if (ValidateInputs())
                 {
+                    // Perform addition and format the result
                     calculationResult = PerformAddition(firstNumber, secondNumber);
                     string calculationText = $"{firstNumber} + {secondNumber} = {calculationResult}";
                     resultLabel.Text = $"Result: {calculationText}";
                     resultLabel.ForeColor = Color.Black;
+                    // Add to history and enable controls
                     AddToHistory(calculationText);
                     EnableCalculatorControls(true);
                 }
             }
             catch (OverflowException ex)
             {
+                // Handle overflow errors (result too large)
                 resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
             catch (Exception ex)
             {
+                // Handle any other unexpected errors
                 resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
         }
 
+        /// <summary>
+        /// Event handler for the Subtract button click.
+        /// Performs subtraction operation, displays result, and adds to history.
+        /// </summary>
         private void SubtractButton_Click(object sender, EventArgs e)
         {
             try
             {
+                // Validate inputs before performing calculation
                 if (ValidateInputs())
                 {
+                    // Perform subtraction and format the result
                     calculationResult = PerformSubtraction(firstNumber, secondNumber);
                     string calculationText = $"{firstNumber} − {secondNumber} = {calculationResult}";
                     resultLabel.Text = $"Result: {calculationText}";
                     resultLabel.ForeColor = Color.Black;
+                    // Add to history and enable controls
                     AddToHistory(calculationText);
                     EnableCalculatorControls(true);
                 }
             }
             catch (OverflowException ex)
             {
+                // Handle overflow errors (result too large)
                 resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
             catch (Exception ex)
             {
+                // Handle any other unexpected errors
                 resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
         }
 
+        /// <summary>
+        /// Event handler for the Multiply button click.
+        /// Performs multiplication operation, displays result, and adds to history.
+        /// </summary>
         private void MultiplyButton_Click(object sender, EventArgs e)
         {
             try
             {
+                // Validate inputs before performing calculation
                 if (ValidateInputs())
                 {
+                    // Perform multiplication and format the result
                     calculationResult = PerformMultiplication(firstNumber, secondNumber);
                     string calculationText = $"{firstNumber} × {secondNumber} = {calculationResult}";
                     resultLabel.Text = $"Result: {calculationText}";
                     resultLabel.ForeColor = Color.Black;
+                    // Add to history and enable controls
                     AddToHistory(calculationText);
                     EnableCalculatorControls(true);
                 }
             }
             catch (OverflowException ex)
             {
+                // Handle overflow errors (result too large)
                 resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
             catch (Exception ex)
             {
+                // Handle any other unexpected errors
                 resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
         }
 
+        /// <summary>
+        /// Event handler for the Divide button click.
+        /// Performs division operation, displays result, and adds to history.
+        /// Checks for division by zero before performing the operation.
+        /// </summary>
         private void DivideButton_Click(object sender, EventArgs e)
         {
             try
             {
+                // Validate inputs before performing calculation
                 if (ValidateInputs())
                 {
+                    // Check for division by zero
                     if (secondNumber == 0)
                     {
                         throw new DivideByZeroException("Cannot divide by zero. Please enter a non-zero second number.");
                     }
+                    // Perform division and format the result
                     calculationResult = PerformDivision(firstNumber, secondNumber);
                     string calculationText = $"{firstNumber} ÷ {secondNumber} = {calculationResult}";
                     resultLabel.Text = $"Result: {calculationText}";
                     resultLabel.ForeColor = Color.Black;
+                    // Add to history and enable controls
                     AddToHistory(calculationText);
                     EnableCalculatorControls(true);
                 }
             }
             catch (DivideByZeroException ex)
             {
+                // Handle division by zero error
                 resultLabel.Text = $"Error: {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
             catch (OverflowException ex)
             {
+                // Handle overflow errors (result too large)
                 resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
             catch (Exception ex)
             {
+                // Handle any other unexpected errors
                 resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
         }
 
+        /// <summary>
+        /// Event handler for the Clear button click.
+        /// Clears all input fields and resets the calculator.
+        /// </summary>
         private void ClearButton_Click(object sender, EventArgs e)
         {
             ClearCalculator();
         }
 
+        /// <summary>
+        /// Event handler for the View History button click.
+        /// Opens the history form to display calculation history.
+        /// </summary>
         private void ViewHistoryButton_Click(object sender, EventArgs e)
         {
             OpenHistoryForm();
         }
 
+        /// <summary>
+        /// Clears all input fields and resets the result label.
+        /// Also disables the operation buttons.
+        /// </summary>
         private void ClearCalculator()
         {
             number1TextBox.Clear();
             number2TextBox.Clear();
             resultLabel.Text = "Result will appear here";
             resultLabel.ForeColor = Color.Black;
-            EnableCalculatorControls(false);
+            EnableCalculatorControls(false); // Disable operation buttons when cleared
         }
 
+        /// <summary>
+        /// Enables or disables the calculator operation buttons based on input state.
+        /// </summary>
+        /// <param name="enabled">If true, enables buttons when inputs are valid. If false, disables all buttons.</param>
         private void EnableCalculatorControls(bool enabled)
         {
             if (enabled)
             {
-                addButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
-                subtractButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
-                multiplyButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
-                divideButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
+                // Enable buttons only if both text boxes have non-empty content
+                bool hasValidInputs = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
+                addButton.Enabled = hasValidInputs;
+                subtractButton.Enabled = hasValidInputs;
+                multiplyButton.Enabled = hasValidInputs;
+                divideButton.Enabled = hasValidInputs;
             }
             else
             {
+                // Disable all operation buttons
                 addButton.Enabled = false;
                 subtractButton.Enabled = false;
                 multiplyButton.Enabled = false;
@@ -388,34 +501,51 @@ namespace CalculatorApp
             }
         }
 
+        /// <summary>
+        /// Adds a calculation to the history list and arrays.
+        /// Uses circular buffer approach - wraps around when max entries reached.
+        /// </summary>
+        /// <param name="calculation">The calculation string to add (e.g., "5 + 3 = 8")</param>
         private void AddToHistory(string calculation)
         {
             try
             {
+                // If we've reached max entries, wrap around to the beginning (circular buffer)
                 if (historyEntryCount >= MaxHistoryEntries)
                 {
                     historyEntryCount = 0;
                 }
 
+                // Store the result and operation in the arrays
                 resultArray[historyEntryCount] = calculationResult;
                 operationArray[historyEntryCount] = calculation;
 
-                historyEntryCount++;
+                historyEntryCount++; // Increment for next entry
 
+                // Also add to the list with timestamp
                 calculationHistory.Add($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {calculation}");
             }
             catch (IndexOutOfRangeException ex)
             {
+                // Handle array index errors
                 resultLabel.Text = $"Error: History array index out of range. {ex.Message}";
                 resultLabel.ForeColor = Color.Red;
             }
         }
 
+        /// <summary>
+        /// Event handler for text changes in the number input text boxes.
+        /// Updates the enabled state of operation buttons based on input validity.
+        /// </summary>
         private void NumberTextBox_TextChanged(object sender, EventArgs e)
         {
-            EnableCalculatorControls(true);
+            EnableCalculatorControls(true); // Re-evaluate button states
         }
 
+        /// <summary>
+        /// Event handler for the Save Array Data button click.
+        /// Saves the current array data to a file.
+        /// </summary>
         private void SaveArraysButton_Click(object sender, EventArgs e)
         {
             SaveArraysToFile();
@@ -479,30 +609,50 @@ namespace CalculatorApp
             }
         }
 
+        /// <summary>
+        /// Opens the history form as a modal dialog to display calculation history.
+        /// </summary>
         private void OpenHistoryForm()
         {
             HistoryForm historyForm = new HistoryForm(calculationHistory);
-            historyForm.ShowDialog();
+            historyForm.ShowDialog(); // Show as modal dialog
         }
 
+        /// <summary>
+        /// Event handler for the Load Array Data button click.
+        /// Opens the array data form to view and edit array data.
+        /// Updates the arrays if the user saves changes.
+        /// </summary>
         private void LoadArraysButton_Click(object sender, EventArgs e)
         {
+            // Open array data form with current array data
             ArrayDataForm arrayForm = new ArrayDataForm(resultArray, operationArray, historyEntryCount, MaxHistoryEntries);
             if (arrayForm.ShowDialog() == DialogResult.OK)
             {
+                // User saved changes - update arrays with edited data
                 resultArray = arrayForm.GetResultArray();
                 operationArray = arrayForm.GetOperationArray();
                 historyEntryCount = arrayForm.GetHistoryEntryCount();
             }
         }
 
+        /// <summary>
+        /// Event handler for the Save Settings button click.
+        /// Saves the current calculator settings to a file.
+        /// </summary>
         private void SaveSettingsButton_Click(object sender, EventArgs e)
         {
             SaveSettingsToFile();
         }
 
+        /// <summary>
+        /// Event handler for the Load Settings button click.
+        /// Opens the settings form to view and edit calculator settings.
+        /// Updates the calculator state if the user saves changes.
+        /// </summary>
         private void LoadSettingsButton_Click(object sender, EventArgs e)
         {
+            // Prepare current settings values
             DateTime lastDate = DateTime.Now;
             int totalCalc = historyEntryCount;
             int maxEntries = MaxHistoryEntries;
@@ -510,14 +660,17 @@ namespace CalculatorApp
             double secondNum = secondNumber;
             double lastRes = calculationResult;
 
+            // Open settings form with current values
             SettingsForm settingsForm = new SettingsForm(lastDate, totalCalc, maxEntries, firstNum, secondNum, lastRes);
             if (settingsForm.ShowDialog() == DialogResult.OK)
             {
+                // User saved changes - update calculator state with edited settings
                 firstNumber = settingsForm.GetFirstNumber();
                 secondNumber = settingsForm.GetSecondNumber();
                 calculationResult = settingsForm.GetLastResult();
                 historyEntryCount = settingsForm.GetTotalCalculations();
                 
+                // Update UI to reflect loaded settings
                 number1TextBox.Text = firstNumber.ToString();
                 number2TextBox.Text = secondNumber.ToString();
                 resultLabel.Text = $"Last Result: {calculationResult}";
@@ -529,33 +682,45 @@ namespace CalculatorApp
         /// Reads array data from the first file (CalculatorArrayData.txt) silently without showing modals.
         /// This method is used for automatic loading on startup.
         /// </summary>
+        /// <summary>
+        /// Reads array data from the first file (CalculatorArrayData.txt) silently without showing modals.
+        /// This method is used for automatic loading on startup.
+        /// Fails silently if file doesn't exist or has errors.
+        /// </summary>
         private void LoadArrayDataFromFileSilent()
         {
             try
             {
+                // Get the file path in the user's Documents folder
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string filePath = Path.Combine(documentsPath, "CalculatorArrayData.txt");
 
+                // If file doesn't exist, just return (silent failure)
                 if (!File.Exists(filePath))
                 {
                     return;
                 }
 
+                // Read and parse the array data file
                 using (StreamReader reader = new StreamReader(filePath))
                 {
+                    // Read and validate header line
                     string headerLine = reader.ReadLine();
                     if (headerLine == null || !headerLine.Contains("Index"))
                     {
-                        return;
+                        return; // Invalid file format
                     }
 
+                    // Reset entry count and read data lines
                     historyEntryCount = 0;
                     string line;
                     while ((line = reader.ReadLine()) != null && historyEntryCount < MaxHistoryEntries)
                     {
+                        // Parse CSV format: Index, Operation, Result
                         string[] parts = line.Split(',');
                         if (parts.Length >= 3)
                         {
+                            // Parse result value and store in arrays
                             if (double.TryParse(parts[2].Trim(), out double result))
                             {
                                 resultArray[historyEntryCount] = result;
@@ -568,6 +733,7 @@ namespace CalculatorApp
             }
             catch
             {
+                // Silently ignore any errors during silent load
             }
         }
 
@@ -687,21 +853,30 @@ namespace CalculatorApp
         /// Reads calculator settings from the second file (CalculatorSettings.txt) silently without showing modals.
         /// This method is used for automatic loading on startup.
         /// </summary>
+        /// <summary>
+        /// Reads calculator settings from the second file (CalculatorSettings.txt) silently without showing modals.
+        /// This method is used for automatic loading on startup.
+        /// Fails silently if file doesn't exist or has errors.
+        /// </summary>
         private void LoadSettingsFromFileSilent()
         {
             try
             {
+                // Get the file path in the user's Documents folder
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string filePath = Path.Combine(documentsPath, "CalculatorSettings.txt");
 
+                // If file doesn't exist, just return (silent failure)
                 if (!File.Exists(filePath))
                 {
                     return;
                 }
 
+                // Read and parse the settings file
                 using (StreamReader reader = new StreamReader(filePath))
                 {
                     string line;
+                    // Read each line and parse key-value pairs
                     while ((line = reader.ReadLine()) != null)
                     {
                         if (line.Contains("="))
@@ -712,10 +887,12 @@ namespace CalculatorApp
                                 string key = parts[0].Trim();
                                 string value = parts[1].Trim();
 
+                                // Parse and set LastResult if found
                                 if (key == "LastResult" && double.TryParse(value, out double lastResult))
                                 {
                                     calculationResult = lastResult;
                                 }
+                                // Parse and set TotalCalculations if found (with validation)
                                 else if (key == "TotalCalculations" && int.TryParse(value, out int total))
                                 {
                                     if (total > 0 && total <= MaxHistoryEntries)
@@ -730,6 +907,7 @@ namespace CalculatorApp
             }
             catch
             {
+                // Silently ignore any errors during silent load
             }
         }
 
@@ -739,13 +917,21 @@ namespace CalculatorApp
         /// It restores calculator state including last result and calculation count.
         /// Handles FileNotFoundException, IOException, and other exceptions for file read operations.
         /// </summary>
+        /// <summary>
+        /// Reads calculator settings from the second file (CalculatorSettings.txt).
+        /// This method demonstrates reading from a file and parsing key-value pairs.
+        /// It handles file I/O exceptions including FileNotFoundException and IOException.
+        /// Shows user-friendly messages for file operations.
+        /// </summary>
         private void LoadSettingsFromFile()
         {
             try
             {
+                // Get the file path in the user's Documents folder
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string filePath = Path.Combine(documentsPath, "CalculatorSettings.txt");
 
+                // Check if file exists
                 if (!File.Exists(filePath))
                 {
                     MessageBox.Show("Settings file not found.",
@@ -753,9 +939,11 @@ namespace CalculatorApp
                     return;
                 }
 
+                // Read and parse the settings file
                 using (StreamReader reader = new StreamReader(filePath))
                 {
                     string line;
+                    // Read each line and parse key-value pairs
                     while ((line = reader.ReadLine()) != null)
                     {
                         if (line.Contains("="))
@@ -766,10 +954,12 @@ namespace CalculatorApp
                                 string key = parts[0].Trim();
                                 string value = parts[1].Trim();
 
+                                // Parse and set LastResult if found
                                 if (key == "LastResult" && double.TryParse(value, out double lastResult))
                                 {
                                     calculationResult = lastResult;
                                 }
+                                // Parse and set TotalCalculations if found (with validation)
                                 else if (key == "TotalCalculations" && int.TryParse(value, out int total))
                                 {
                                     if (total > 0 && total <= MaxHistoryEntries)
@@ -782,6 +972,7 @@ namespace CalculatorApp
                     }
                 }
 
+                // Show success message
                 MessageBox.Show("Settings loaded successfully from file.",
                     "Settings Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
