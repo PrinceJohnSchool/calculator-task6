@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -12,21 +13,25 @@ namespace CalculatorApp
         private Button subtractButton;
         private Button multiplyButton;
         private Button divideButton;
+        private Button clearButton;
+        private Button viewHistoryButton;
         private Label resultLabel;
 
         private double firstNumber;
         private double secondNumber;
         private double calculationResult;
+        private List<string> calculationHistory;
 
         public CalculatorForm()
         {
+            calculationHistory = new List<string>();
             InitializeComponent();
         }
 
         private void InitializeComponent()
         {
             this.Text = "Simple Calculator";
-            this.Size = new Size(400, 300);
+            this.Size = new Size(400, 350);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.LightGray;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -39,6 +44,7 @@ namespace CalculatorApp
             number1TextBox.Font = new Font("Arial", 12);
             number1TextBox.TextAlign = HorizontalAlignment.Center;
             number1TextBox.PlaceholderText = "Enter first number";
+            number1TextBox.TextChanged += NumberTextBox_TextChanged;
             this.Controls.Add(number1TextBox);
 
             number2TextBox = new TextBox();
@@ -47,6 +53,7 @@ namespace CalculatorApp
             number2TextBox.Font = new Font("Arial", 12);
             number2TextBox.TextAlign = HorizontalAlignment.Center;
             number2TextBox.PlaceholderText = "Enter second number";
+            number2TextBox.TextChanged += NumberTextBox_TextChanged;
             this.Controls.Add(number2TextBox);
 
             addButton = new Button();
@@ -98,6 +105,26 @@ namespace CalculatorApp
             resultLabel.BackColor = Color.White;
             resultLabel.BorderStyle = BorderStyle.FixedSingle;
             this.Controls.Add(resultLabel);
+
+            clearButton = new Button();
+            clearButton.Text = "Clear";
+            clearButton.Location = new Point(50, 200);
+            clearButton.Size = new Size(120, 35);
+            clearButton.Font = new Font("Arial", 11, FontStyle.Bold);
+            clearButton.BackColor = Color.LightYellow;
+            clearButton.ForeColor = Color.DarkOrange;
+            clearButton.Click += ClearButton_Click;
+            this.Controls.Add(clearButton);
+
+            viewHistoryButton = new Button();
+            viewHistoryButton.Text = "View History";
+            viewHistoryButton.Location = new Point(230, 200);
+            viewHistoryButton.Size = new Size(120, 35);
+            viewHistoryButton.Font = new Font("Arial", 11, FontStyle.Bold);
+            viewHistoryButton.BackColor = Color.LightGreen;
+            viewHistoryButton.ForeColor = Color.DarkGreen;
+            viewHistoryButton.Click += ViewHistoryButton_Click;
+            this.Controls.Add(viewHistoryButton);
 
             Label titleLabel = new Label();
             titleLabel.Text = "Simple Calculator";
@@ -153,50 +180,168 @@ namespace CalculatorApp
 
         private void AddButton_Click(object sender, EventArgs e)
         {
-            if (ValidateInputs())
+            try
             {
-                calculationResult = PerformAddition(firstNumber, secondNumber);
-                resultLabel.Text = $"Result: {firstNumber} + {secondNumber} = {calculationResult}";
-                resultLabel.ForeColor = Color.Black;
+                if (ValidateInputs())
+                {
+                    calculationResult = PerformAddition(firstNumber, secondNumber);
+                    string calculationText = $"{firstNumber} + {secondNumber} = {calculationResult}";
+                    resultLabel.Text = $"Result: {calculationText}";
+                    resultLabel.ForeColor = Color.Black;
+                    AddToHistory(calculationText);
+                    EnableCalculatorControls(true);
+                }
+            }
+            catch (OverflowException ex)
+            {
+                resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
+            }
+            catch (Exception ex)
+            {
+                resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
             }
         }
 
         private void SubtractButton_Click(object sender, EventArgs e)
         {
-            if (ValidateInputs())
+            try
             {
-                calculationResult = PerformSubtraction(firstNumber, secondNumber);
-                resultLabel.Text = $"Result: {firstNumber} − {secondNumber} = {calculationResult}";
-                resultLabel.ForeColor = Color.Black;
+                if (ValidateInputs())
+                {
+                    calculationResult = PerformSubtraction(firstNumber, secondNumber);
+                    string calculationText = $"{firstNumber} − {secondNumber} = {calculationResult}";
+                    resultLabel.Text = $"Result: {calculationText}";
+                    resultLabel.ForeColor = Color.Black;
+                    AddToHistory(calculationText);
+                    EnableCalculatorControls(true);
+                }
+            }
+            catch (OverflowException ex)
+            {
+                resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
+            }
+            catch (Exception ex)
+            {
+                resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
             }
         }
 
         private void MultiplyButton_Click(object sender, EventArgs e)
         {
-            if (ValidateInputs())
+            try
             {
-                calculationResult = PerformMultiplication(firstNumber, secondNumber);
-                resultLabel.Text = $"Result: {firstNumber} × {secondNumber} = {calculationResult}";
-                resultLabel.ForeColor = Color.Black;
+                if (ValidateInputs())
+                {
+                    calculationResult = PerformMultiplication(firstNumber, secondNumber);
+                    string calculationText = $"{firstNumber} × {secondNumber} = {calculationResult}";
+                    resultLabel.Text = $"Result: {calculationText}";
+                    resultLabel.ForeColor = Color.Black;
+                    AddToHistory(calculationText);
+                    EnableCalculatorControls(true);
+                }
+            }
+            catch (OverflowException ex)
+            {
+                resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
+            }
+            catch (Exception ex)
+            {
+                resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
             }
         }
 
         private void DivideButton_Click(object sender, EventArgs e)
         {
-            if (ValidateInputs())
+            try
             {
-                if (secondNumber == 0)
+                if (ValidateInputs())
                 {
-                    resultLabel.Text = "Error: Cannot divide by zero. Please enter a non-zero second number.";
-                    resultLabel.ForeColor = Color.Red;
-                }
-                else
-                {
+                    if (secondNumber == 0)
+                    {
+                        throw new DivideByZeroException("Cannot divide by zero. Please enter a non-zero second number.");
+                    }
                     calculationResult = PerformDivision(firstNumber, secondNumber);
-                    resultLabel.Text = $"Result: {firstNumber} ÷ {secondNumber} = {calculationResult}";
+                    string calculationText = $"{firstNumber} ÷ {secondNumber} = {calculationResult}";
+                    resultLabel.Text = $"Result: {calculationText}";
                     resultLabel.ForeColor = Color.Black;
+                    AddToHistory(calculationText);
+                    EnableCalculatorControls(true);
                 }
             }
+            catch (DivideByZeroException ex)
+            {
+                resultLabel.Text = $"Error: {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
+            }
+            catch (OverflowException ex)
+            {
+                resultLabel.Text = $"Error: Calculation result is too large. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
+            }
+            catch (Exception ex)
+            {
+                resultLabel.Text = $"Error: An unexpected error occurred. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
+            }
+        }
+
+        private void ClearButton_Click(object sender, EventArgs e)
+        {
+            ClearCalculator();
+        }
+
+        private void ViewHistoryButton_Click(object sender, EventArgs e)
+        {
+            OpenHistoryForm();
+        }
+
+        private void ClearCalculator()
+        {
+            number1TextBox.Clear();
+            number2TextBox.Clear();
+            resultLabel.Text = "Result will appear here";
+            resultLabel.ForeColor = Color.Black;
+            EnableCalculatorControls(false);
+        }
+
+        private void EnableCalculatorControls(bool enabled)
+        {
+            if (enabled)
+            {
+                addButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
+                subtractButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
+                multiplyButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
+                divideButton.Enabled = !string.IsNullOrWhiteSpace(number1TextBox.Text) && !string.IsNullOrWhiteSpace(number2TextBox.Text);
+            }
+            else
+            {
+                addButton.Enabled = false;
+                subtractButton.Enabled = false;
+                multiplyButton.Enabled = false;
+                divideButton.Enabled = false;
+            }
+        }
+
+        private void AddToHistory(string calculation)
+        {
+            calculationHistory.Add($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {calculation}");
+        }
+
+        private void NumberTextBox_TextChanged(object sender, EventArgs e)
+        {
+            EnableCalculatorControls(true);
+        }
+
+        private void OpenHistoryForm()
+        {
+            HistoryForm historyForm = new HistoryForm(calculationHistory);
+            historyForm.ShowDialog();
         }
     }
 }
