@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace CalculatorApp
 {
     public partial class CalculatorForm : Form
     {
+        private const int MaxHistoryEntries = 50;
+
         private TextBox number1TextBox;
         private TextBox number2TextBox;
         private Button addButton;
@@ -15,6 +18,7 @@ namespace CalculatorApp
         private Button divideButton;
         private Button clearButton;
         private Button viewHistoryButton;
+        private Button saveArraysButton;
         private Label resultLabel;
 
         private double firstNumber;
@@ -22,16 +26,27 @@ namespace CalculatorApp
         private double calculationResult;
         private List<string> calculationHistory;
 
+        // Arrays for the arrays assignment requirements
+        // Stores just the numeric result values
+        private double[] resultArray;
+        // Stores the text of the calculation (e.g. "5 + 3 = 8")
+        private string[] operationArray;
+        // Keeps track of how many entries are currently stored
+        private int historyEntryCount;
+
         public CalculatorForm()
         {
             calculationHistory = new List<string>();
+            resultArray = new double[MaxHistoryEntries];
+            operationArray = new string[MaxHistoryEntries];
+            historyEntryCount = 0;
             InitializeComponent();
         }
 
         private void InitializeComponent()
         {
             this.Text = "Simple Calculator";
-            this.Size = new Size(400, 350);
+            this.Size = new Size(400, 400);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.LightGray;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -125,6 +140,16 @@ namespace CalculatorApp
             viewHistoryButton.ForeColor = Color.DarkGreen;
             viewHistoryButton.Click += ViewHistoryButton_Click;
             this.Controls.Add(viewHistoryButton);
+
+            saveArraysButton = new Button();
+            saveArraysButton.Text = "Save Array Data";
+            saveArraysButton.Location = new Point(50, 245);
+            saveArraysButton.Size = new Size(300, 35);
+            saveArraysButton.Font = new Font("Arial", 11, FontStyle.Bold);
+            saveArraysButton.BackColor = Color.LightBlue;
+            saveArraysButton.ForeColor = Color.DarkBlue;
+            saveArraysButton.Click += SaveArraysButton_Click;
+            this.Controls.Add(saveArraysButton);
 
             Label titleLabel = new Label();
             titleLabel.Text = "Simple Calculator";
@@ -330,12 +355,87 @@ namespace CalculatorApp
 
         private void AddToHistory(string calculation)
         {
-            calculationHistory.Add($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {calculation}");
+            try
+            {
+                if (historyEntryCount >= MaxHistoryEntries)
+                {
+                    historyEntryCount = 0;
+                }
+
+                resultArray[historyEntryCount] = calculationResult;
+                operationArray[historyEntryCount] = calculation;
+
+                historyEntryCount++;
+
+                calculationHistory.Add($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {calculation}");
+            }
+            catch (IndexOutOfRangeException ex)
+            {
+                resultLabel.Text = $"Error: History array index out of range. {ex.Message}";
+                resultLabel.ForeColor = Color.Red;
+            }
         }
 
         private void NumberTextBox_TextChanged(object sender, EventArgs e)
         {
             EnableCalculatorControls(true);
+        }
+
+        private void SaveArraysButton_Click(object sender, EventArgs e)
+        {
+            SaveArraysToFile();
+        }
+
+        private void SaveArraysToFile()
+        {
+            try
+            {
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string filePath = Path.Combine(documentsPath, "CalculatorArrayData.txt");
+
+                using (StreamWriter writer = new StreamWriter(filePath))
+                {
+                    writer.WriteLine("Index, Operation, Result");
+
+                    for (int i = 0; i < historyEntryCount; i++)
+                    {
+                        writer.WriteLine($"{i + 1}, {operationArray[i]}, {resultArray[i]}");
+                    }
+                }
+
+                int previewCount = Math.Min(historyEntryCount, 5);
+                string previewText = string.Empty;
+
+                for (int i = 0; i < previewCount; i++)
+                {
+                    previewText += $"{i + 1}. {operationArray[i]} (Result: {resultArray[i]}){Environment.NewLine}";
+                }
+
+                string message;
+
+                if (historyEntryCount > 0)
+                {
+                    message = $"Array data saved to:{Environment.NewLine}{filePath}{Environment.NewLine}{Environment.NewLine}" +
+                              $"First {previewCount} entries:{Environment.NewLine}{previewText}";
+                }
+                else
+                {
+                    message = $"Array data saved to:{Environment.NewLine}{filePath}{Environment.NewLine}{Environment.NewLine}" +
+                              "No calculations stored in the arrays yet.";
+                }
+
+                MessageBox.Show(message, "Array Data Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show($"Error: Access denied when writing array data to file.{Environment.NewLine}{ex.Message}",
+                    "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show($"Error: Problem writing array data to file.{Environment.NewLine}{ex.Message}",
+                    "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void OpenHistoryForm()
