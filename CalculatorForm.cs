@@ -19,6 +19,9 @@ namespace CalculatorApp
         private Button clearButton;
         private Button viewHistoryButton;
         private Button saveArraysButton;
+        private Button loadArraysButton;
+        private Button saveSettingsButton;
+        private Button loadSettingsButton;
         private Label resultLabel;
 
         private double firstNumber;
@@ -41,12 +44,14 @@ namespace CalculatorApp
             operationArray = new string[MaxHistoryEntries];
             historyEntryCount = 0;
             InitializeComponent();
+            LoadArrayDataFromFileSilent();
+            LoadSettingsFromFileSilent();
         }
 
         private void InitializeComponent()
         {
             this.Text = "Simple Calculator";
-            this.Size = new Size(400, 400);
+            this.Size = new Size(400, 490);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.LightGray;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -144,12 +149,42 @@ namespace CalculatorApp
             saveArraysButton = new Button();
             saveArraysButton.Text = "Save Array Data";
             saveArraysButton.Location = new Point(50, 245);
-            saveArraysButton.Size = new Size(300, 35);
+            saveArraysButton.Size = new Size(145, 35);
             saveArraysButton.Font = new Font("Arial", 11, FontStyle.Bold);
             saveArraysButton.BackColor = Color.LightBlue;
             saveArraysButton.ForeColor = Color.DarkBlue;
             saveArraysButton.Click += SaveArraysButton_Click;
             this.Controls.Add(saveArraysButton);
+
+            loadArraysButton = new Button();
+            loadArraysButton.Text = "Load Array Data";
+            loadArraysButton.Location = new Point(205, 245);
+            loadArraysButton.Size = new Size(145, 35);
+            loadArraysButton.Font = new Font("Arial", 11, FontStyle.Bold);
+            loadArraysButton.BackColor = Color.LightCyan;
+            loadArraysButton.ForeColor = Color.DarkCyan;
+            loadArraysButton.Click += LoadArraysButton_Click;
+            this.Controls.Add(loadArraysButton);
+
+            saveSettingsButton = new Button();
+            saveSettingsButton.Text = "Save Settings";
+            saveSettingsButton.Location = new Point(50, 290);
+            saveSettingsButton.Size = new Size(145, 35);
+            saveSettingsButton.Font = new Font("Arial", 11, FontStyle.Bold);
+            saveSettingsButton.BackColor = Color.LightPink;
+            saveSettingsButton.ForeColor = Color.DarkRed;
+            saveSettingsButton.Click += SaveSettingsButton_Click;
+            this.Controls.Add(saveSettingsButton);
+
+            loadSettingsButton = new Button();
+            loadSettingsButton.Text = "Load Settings";
+            loadSettingsButton.Location = new Point(205, 290);
+            loadSettingsButton.Size = new Size(145, 35);
+            loadSettingsButton.Font = new Font("Arial", 11, FontStyle.Bold);
+            loadSettingsButton.BackColor = Color.LightSalmon;
+            loadSettingsButton.ForeColor = Color.DarkRed;
+            loadSettingsButton.Click += LoadSettingsButton_Click;
+            this.Controls.Add(loadSettingsButton);
 
             Label titleLabel = new Label();
             titleLabel.Text = "Simple Calculator";
@@ -386,6 +421,12 @@ namespace CalculatorApp
             SaveArraysToFile();
         }
 
+        /// <summary>
+        /// Writes array data to the first file (CalculatorArrayData.txt).
+        /// This method demonstrates writing array contents to a file in CSV format.
+        /// It writes both the resultArray (double[]) and operationArray (string[]) data.
+        /// Handles UnauthorizedAccessException and IOException for file write operations.
+        /// </summary>
         private void SaveArraysToFile()
         {
             try
@@ -442,6 +483,323 @@ namespace CalculatorApp
         {
             HistoryForm historyForm = new HistoryForm(calculationHistory);
             historyForm.ShowDialog();
+        }
+
+        private void LoadArraysButton_Click(object sender, EventArgs e)
+        {
+            ArrayDataForm arrayForm = new ArrayDataForm(resultArray, operationArray, historyEntryCount, MaxHistoryEntries);
+            if (arrayForm.ShowDialog() == DialogResult.OK)
+            {
+                resultArray = arrayForm.GetResultArray();
+                operationArray = arrayForm.GetOperationArray();
+                historyEntryCount = arrayForm.GetHistoryEntryCount();
+            }
+        }
+
+        private void SaveSettingsButton_Click(object sender, EventArgs e)
+        {
+            SaveSettingsToFile();
+        }
+
+        private void LoadSettingsButton_Click(object sender, EventArgs e)
+        {
+            DateTime lastDate = DateTime.Now;
+            int totalCalc = historyEntryCount;
+            int maxEntries = MaxHistoryEntries;
+            double firstNum = firstNumber;
+            double secondNum = secondNumber;
+            double lastRes = calculationResult;
+
+            SettingsForm settingsForm = new SettingsForm(lastDate, totalCalc, maxEntries, firstNum, secondNum, lastRes);
+            if (settingsForm.ShowDialog() == DialogResult.OK)
+            {
+                firstNumber = settingsForm.GetFirstNumber();
+                secondNumber = settingsForm.GetSecondNumber();
+                calculationResult = settingsForm.GetLastResult();
+                historyEntryCount = settingsForm.GetTotalCalculations();
+                
+                number1TextBox.Text = firstNumber.ToString();
+                number2TextBox.Text = secondNumber.ToString();
+                resultLabel.Text = $"Last Result: {calculationResult}";
+                resultLabel.ForeColor = Color.Black;
+            }
+        }
+
+        /// <summary>
+        /// Reads array data from the first file (CalculatorArrayData.txt) silently without showing modals.
+        /// This method is used for automatic loading on startup.
+        /// </summary>
+        private void LoadArrayDataFromFileSilent()
+        {
+            try
+            {
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string filePath = Path.Combine(documentsPath, "CalculatorArrayData.txt");
+
+                if (!File.Exists(filePath))
+                {
+                    return;
+                }
+
+                using (StreamReader reader = new StreamReader(filePath))
+                {
+                    string headerLine = reader.ReadLine();
+                    if (headerLine == null || !headerLine.Contains("Index"))
+                    {
+                        return;
+                    }
+
+                    historyEntryCount = 0;
+                    string line;
+                    while ((line = reader.ReadLine()) != null && historyEntryCount < MaxHistoryEntries)
+                    {
+                        string[] parts = line.Split(',');
+                        if (parts.Length >= 3)
+                        {
+                            if (double.TryParse(parts[2].Trim(), out double result))
+                            {
+                                resultArray[historyEntryCount] = result;
+                                operationArray[historyEntryCount] = parts[1].Trim();
+                                historyEntryCount++;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// Reads array data from the first file (CalculatorArrayData.txt).
+        /// This method demonstrates reading from a file and populating arrays.
+        /// It handles file I/O exceptions including FileNotFoundException and IOException.
+        /// </summary>
+        private void LoadArrayDataFromFile()
+        {
+            try
+            {
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string filePath = Path.Combine(documentsPath, "CalculatorArrayData.txt");
+
+                if (!File.Exists(filePath))
+                {
+                    MessageBox.Show("Array data file not found.",
+                        "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                using (StreamReader reader = new StreamReader(filePath))
+                {
+                    string headerLine = reader.ReadLine();
+                    if (headerLine == null || !headerLine.Contains("Index"))
+                    {
+                        MessageBox.Show("Invalid file format.",
+                            "File Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    historyEntryCount = 0;
+                    string line;
+                    while ((line = reader.ReadLine()) != null && historyEntryCount < MaxHistoryEntries)
+                    {
+                        string[] parts = line.Split(',');
+                        if (parts.Length >= 3)
+                        {
+                            if (double.TryParse(parts[2].Trim(), out double result))
+                            {
+                                resultArray[historyEntryCount] = result;
+                                operationArray[historyEntryCount] = parts[1].Trim();
+                                historyEntryCount++;
+                            }
+                        }
+                    }
+                }
+
+                if (historyEntryCount > 0)
+                {
+                    MessageBox.Show($"Loaded {historyEntryCount} calculation entries from array data file.",
+                        "Array Data Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (FileNotFoundException ex)
+            {
+                MessageBox.Show($"Array data file not found.{Environment.NewLine}{ex.Message}",
+                    "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show($"Error reading array data file.{Environment.NewLine}{ex.Message}",
+                    "File Read Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected error loading array data.{Environment.NewLine}{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Writes calculator settings to the second file (CalculatorSettings.txt).
+        /// This method demonstrates writing to a file with key-value pairs.
+        /// It saves current calculator state including last result, calculation count, and other settings.
+        /// Handles UnauthorizedAccessException and IOException for file write operations.
+        /// </summary>
+        private void SaveSettingsToFile()
+        {
+            try
+            {
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string filePath = Path.Combine(documentsPath, "CalculatorSettings.txt");
+
+                using (StreamWriter writer = new StreamWriter(filePath))
+                {
+                    writer.WriteLine($"LastCalculationDate={DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    writer.WriteLine($"TotalCalculations={historyEntryCount}");
+                    writer.WriteLine($"MaxHistoryEntries={MaxHistoryEntries}");
+                    writer.WriteLine($"FirstNumber={firstNumber}");
+                    writer.WriteLine($"SecondNumber={secondNumber}");
+                    writer.WriteLine($"LastResult={calculationResult}");
+                }
+
+                MessageBox.Show($"Settings saved to:{Environment.NewLine}{filePath}",
+                    "Settings Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show($"Error: Access denied when writing settings file.{Environment.NewLine}{ex.Message}",
+                    "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show($"Error: Problem writing settings file.{Environment.NewLine}{ex.Message}",
+                    "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected error saving settings.{Environment.NewLine}{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Reads calculator settings from the second file (CalculatorSettings.txt) silently without showing modals.
+        /// This method is used for automatic loading on startup.
+        /// </summary>
+        private void LoadSettingsFromFileSilent()
+        {
+            try
+            {
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string filePath = Path.Combine(documentsPath, "CalculatorSettings.txt");
+
+                if (!File.Exists(filePath))
+                {
+                    return;
+                }
+
+                using (StreamReader reader = new StreamReader(filePath))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Contains("="))
+                        {
+                            string[] parts = line.Split('=');
+                            if (parts.Length == 2)
+                            {
+                                string key = parts[0].Trim();
+                                string value = parts[1].Trim();
+
+                                if (key == "LastResult" && double.TryParse(value, out double lastResult))
+                                {
+                                    calculationResult = lastResult;
+                                }
+                                else if (key == "TotalCalculations" && int.TryParse(value, out int total))
+                                {
+                                    if (total > 0 && total <= MaxHistoryEntries)
+                                    {
+                                        historyEntryCount = total;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// Reads calculator settings from the second file (CalculatorSettings.txt).
+        /// This method demonstrates reading from a file and parsing key-value pairs.
+        /// It restores calculator state including last result and calculation count.
+        /// Handles FileNotFoundException, IOException, and other exceptions for file read operations.
+        /// </summary>
+        private void LoadSettingsFromFile()
+        {
+            try
+            {
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string filePath = Path.Combine(documentsPath, "CalculatorSettings.txt");
+
+                if (!File.Exists(filePath))
+                {
+                    MessageBox.Show("Settings file not found.",
+                        "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                using (StreamReader reader = new StreamReader(filePath))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Contains("="))
+                        {
+                            string[] parts = line.Split('=');
+                            if (parts.Length == 2)
+                            {
+                                string key = parts[0].Trim();
+                                string value = parts[1].Trim();
+
+                                if (key == "LastResult" && double.TryParse(value, out double lastResult))
+                                {
+                                    calculationResult = lastResult;
+                                }
+                                else if (key == "TotalCalculations" && int.TryParse(value, out int total))
+                                {
+                                    if (total > 0 && total <= MaxHistoryEntries)
+                                    {
+                                        historyEntryCount = total;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                MessageBox.Show("Settings loaded successfully from file.",
+                    "Settings Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (FileNotFoundException ex)
+            {
+                MessageBox.Show($"Settings file not found.{Environment.NewLine}{ex.Message}",
+                    "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show($"Error reading settings file.{Environment.NewLine}{ex.Message}",
+                    "File Read Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected error loading settings.{Environment.NewLine}{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
